@@ -26,6 +26,20 @@ router.get('/', (req, res) => {
 
 /** GET /api/ships/stream — SSE endpoint, pushes batched updates every 3s */
 router.get('/stream', (req, res) => {
+  // In serverless (Vercel), SSE can't maintain a persistent connection.
+  // Send an empty snapshot and a serverless flag so the client knows not to retry.
+  if (process.env.VERCEL) {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'close',
+    });
+    res.write(`event: snapshot\ndata: []\n\n`);
+    res.write(`event: serverless\ndata: {"serverless":true}\n\n`);
+    res.end();
+    return;
+  }
+
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',

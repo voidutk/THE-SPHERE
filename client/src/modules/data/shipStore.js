@@ -98,6 +98,13 @@ const useShipStore = create((set, get) => ({
       }
     });
 
+    // Server is running in serverless mode (Vercel) — no persistent ship tracking.
+    // Close the connection and don't retry.
+    es.addEventListener('serverless', () => {
+      es.close();
+      set({ _eventSource: null, connected: false });
+    });
+
     es.onerror = () => {
       set({ connected: false });
     };
